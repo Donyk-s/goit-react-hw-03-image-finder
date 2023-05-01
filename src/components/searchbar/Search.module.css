@@ -68,3 +68,7 @@
   font: inherit;
   font-size: 18px;
 }
+.ErrorMessage {
+  font-size: 24px;
+  color: crimson;
+}
