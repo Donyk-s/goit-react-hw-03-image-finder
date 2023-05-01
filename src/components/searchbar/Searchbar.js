@@ -30,7 +30,7 @@ export const Searchbar = ({ onSubmit }) => {
             <button type="submit" className={css.SearchForm__button}>
               <span className={css.button__label}>Search</span>
             </button>
-            <ErrorMessage name="search" component="div" />
+            <ErrorMessage name="search" className={css.ErrorMessage} />
             <Field
               name="search"
               className={css.SearchForm__input}
