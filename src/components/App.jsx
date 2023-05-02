@@ -1,16 +1,33 @@
 import React, { Component } from 'react';
 import { Searchbar } from './searchbar/Searchbar';
+import { ImageGallery } from '..//components/imageGallery/ImageGallery';
+import css from './App.module.css';
 import axios from 'axios';
 
 export class App extends Component {
   state = {
-    search: '',
+    search: [],
     id: '',
     webformatURL: '',
     largeImageURL: '',
     page: 1,
     per_page: 12,
+    hits: [],
   };
+
+  componentDidMount() {
+    const myApiKey = '34476830-b52e87f2018fae84058c602d8';
+    const url = `https://pixabay.com/api/?q=${this.state.search}&page=${this.state.page}&key=${myApiKey}&image_type=photo&orientation=horizontal&per_page=${this.state.per_page}`;
+
+    axios
+      .get(url)
+      .then(response => {
+        this.setState({ hits: response.data.hits });
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }
 
   componentDidUpdate(prevProps, prevState) {
     const myApiKey = '34476830-b52e87f2018fae84058c602d8';
@@ -22,7 +39,6 @@ export class App extends Component {
         .get(url)
         .then(response => {
           console.log(response.data.hits);
-          //  const {webformatURL, largeImageURL} = response.data.hits
         })
         .catch(error => {
           console.log(error);
@@ -38,17 +54,9 @@ export class App extends Component {
 
   render() {
     return (
-      <div
-        style={{
-          height: '100vh',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          fontSize: 40,
-          color: '#010101',
-        }}
-      >
+      <div className={css.App}>
         <Searchbar onSubmit={this.handleSubmitSearch} />
+        <ImageGallery hits={this.state.hits} />
       </div>
     );
   }
