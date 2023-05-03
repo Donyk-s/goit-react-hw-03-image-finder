@@ -10,20 +10,27 @@ const SearchInputSchema = Yup.object().shape({
 });
 
 export const Searchbar = ({ onSubmit }) => {
-  function handleSubmit(values, { resetForm }) {
-    const search = {
-      search: values.search,
-    };
-    onSubmit(search);
-    resetForm();
-  }
+  // function handleSubmit(values, { resetForm }) {
+  //   const search = {
+  //     search: values.search,
+  //   };
+  //   onSubmit(search);
+  //   resetForm();
+  // }
+  handleSearch = searchQuery => {
+    const { search } = searchQuery;
+    console.log(search); // перевіряємо, чи отримали значення з форми
+    this.setState({ search, hits: [], page: 1 }, () => {
+      this.fetchImages();
+    });
+  };
 
   return (
     <div>
       <Formik
         initialValues={{ search: '' }}
         validationSchema={SearchInputSchema}
-        onSubmit={handleSubmit}
+        onSubmit={handleSearch}
       >
         <header className={css.Searchbar}>
           <Form className={css.SearchForm}>
