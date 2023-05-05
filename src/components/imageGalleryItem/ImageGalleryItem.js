@@ -1,11 +1,12 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-export class ImageGalleryItem extends Component {
-  render() {
-    return (
-      <div className="image-gallery-item">
-        <img src={this.props.hit.webformatURL} alt={this.props.hit.tags} />
-      </div>
-    );
-  }
-}
+export const ImageGalleryItem = ({ hit }) => (
+  <li key={hit.id}>
+    <img
+      src={hit.webformatURL}
+      alt={hit.tags}
+      data-source={hit.largeImageURL}
+      className="ImageGalleryItem-image"
+    />
+  </li>
+);

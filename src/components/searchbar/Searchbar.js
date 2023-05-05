@@ -2,6 +2,7 @@ import React from 'react';
 import css from './/Search.module.css';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+
 const SearchInputSchema = Yup.object().shape({
   search: Yup.string('Enter more than 1 character')
     .min(2, 'Too Short!')
@@ -10,27 +11,21 @@ const SearchInputSchema = Yup.object().shape({
 });
 
 export const Searchbar = ({ onSubmit }) => {
-  // function handleSubmit(values, { resetForm }) {
-  //   const search = {
-  //     search: values.search,
-  //   };
-  //   onSubmit(search);
-  //   resetForm();
-  // }
-  handleSearch = searchQuery => {
-    const { search } = searchQuery;
-    console.log(search); // перевіряємо, чи отримали значення з форми
-    this.setState({ search, hits: [], page: 1 }, () => {
-      this.fetchImages();
-    });
-  };
+  function handleSubmit(values, { resetForm, setSubmitting }) {
+    // event.preventDefault();
+    const search = {
+      search: values.search,
+    };
+    onSubmit(search);
+    resetForm();
+  }
 
   return (
     <div>
       <Formik
         initialValues={{ search: '' }}
         validationSchema={SearchInputSchema}
-        onSubmit={handleSearch}
+        onSubmit={handleSubmit}
       >
         <header className={css.Searchbar}>
           <Form className={css.SearchForm}>
