@@ -1,5 +1,5 @@
 import React from 'react';
-import css from './/Search.module.css';
+import css from './Search.module.css';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
@@ -11,11 +11,8 @@ const SearchInputSchema = Yup.object().shape({
 });
 
 export const Searchbar = ({ onSubmit }) => {
-  function handleSubmit(values, { resetForm, setSubmitting }) {
-    // event.preventDefault();
-    const search = {
-      search: values.search,
-    };
+  function handleSubmit(values, { resetForm }) {
+    const { search } = values;
     onSubmit(search);
     resetForm();
   }
@@ -27,21 +24,23 @@ export const Searchbar = ({ onSubmit }) => {
         validationSchema={SearchInputSchema}
         onSubmit={handleSubmit}
       >
-        <header className={css.Searchbar}>
-          <Form className={css.SearchForm}>
-            <button type="submit" className={css.SearchForm__button}>
-              <span className={css.button__label}>Search</span>
-            </button>
-            <ErrorMessage name="search" className={css.ErrorMessage} />
-            <Field
-              name="search"
-              className={css.SearchForm__input}
-              autoComplete="off"
-              autoFocus
-              placeholder="Search images and photos"
-            />
-          </Form>
-        </header>
+        {({ isSubmitting }) => (
+          <header className={css.Searchbar}>
+            <Form className={css.SearchForm}>
+              <button type="submit" className={css.SearchForm__button}>
+                <span className={css.button__label}>Search</span>
+              </button>
+              <ErrorMessage name="search" className={css.ErrorMessage} />
+              <Field
+                name="search"
+                className={css.SearchForm__input}
+                autoComplete="off"
+                autoFocus
+                placeholder="Search images and photos"
+              />
+            </Form>
+          </header>
+        )}
       </Formik>
     </div>
   );

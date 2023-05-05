@@ -1,75 +1,72 @@
 import React, { Component } from 'react';
 import { Searchbar } from './searchbar/Searchbar';
-import { ImageGallery } from '../components/imageGallery/ImageGallery';
-import Button from '../components/button/Button';
+import { ImageGallery } from './imageGallery/ImageGallery';
+import Button from './button/Button';
 import css from './App.module.css';
 import { BallTriangle } from 'react-loader-spinner';
-import axios from 'axios';
+import { getImages } from '../service/Api';
 
 export class App extends Component {
   state = {
-    searchQuery: '',
     images: [],
+    query: '',
     page: 1,
-    perPage: 12,
     isLoading: false,
+    showModal: false,
+    largeImage: '',
+    tags: '',
+    total: 0,
+    error: null,
+    showLoadMore: false,
   };
 
-  handleSearch = searchQuery => {
-    this.setState({ searchQuery, images: [], page: 1, isLoading: true }, () => {
-      this.fetchImages();
-    });
+  getImagesRequest = async (query, page) => {
+    console.log('getImagesRequest called with query:', query, 'page:', page);
+
+    const images = await getImages(query, page);
+    const newTotal = images.total;
+    this.setState(prevState => ({
+      images: [...prevState.images, ...images.hits],
+      total: newTotal,
+      showLoadMore: newTotal < 12 ? false : true,
+    }));
   };
 
   handleLoadMore = () => {
-    this.setState(
-      prevState => ({ page: prevState.page + 1, isLoading: true }),
-      () => {
-        this.fetchImages();
-      }
+    console.log('handleLoadMore called');
+    const { query, page, images, total } = this.state;
+    const newPage = page + 1;
+
+    this.setState({ page: newPage, isLoading: true }, async () => {
+      await this.getImagesRequest(query, newPage);
+
+      const newImages = [...images, ...this.state.images];
+      const hasMoreImages = newImages.length < total;
+
+      this.setState({
+        images: newImages,
+        showLoadMore: hasMoreImages,
+        isLoading: false,
+      });
+    });
+  };
+
+  handleFormSubmit = query => {
+    this.setState({ query: query, page: 1, images: [], isLoading: true });
+    this.getImagesRequest(query, 1).then(() =>
+      this.setState({
+        showLoadMore: this.state.total >= 12 ? true : false,
+        isLoading: false,
+      })
     );
   };
 
-  fetchImages = async () => {
-    const API_KEY = '34476830-b52e87f2018fae84058c602d8';
-    const { searchQuery, page, perPage } = this.state;
-
-    if (typeof searchQuery !== 'string' || !searchQuery.trim()) {
-      // searchQuery is not a valid string, so return early
-      return;
-    }
-
-    const url = `https://pixabay.com/api/?q=${searchQuery.trim()}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${perPage}`;
-
-    try {
-      const response = await axios.get(url);
-      const newImages = response.data.hits;
-      this.setState(prevState => ({
-        images: [...prevState.images, ...newImages],
-        isLoading: false,
-      }));
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  componentDidUpdate(prevProps, prevState) {
-    const { searchQuery } = this.state;
-    if (searchQuery !== prevState.searchQuery) {
-      this.setState({ images: [], page: 1 });
-    }
-    if (searchQuery !== prevProps.searchQuery) {
-      this.fetchImages();
-    }
-  }
-
   render() {
-    const { images, isLoading } = this.state;
-    const showLoadMore = images.length > 0;
-
+    const { images, isLoading, showLoadMore } = this.state;
+    console.log(this.state.showLoadMore);
     return (
       <div className={css.App}>
-        <Searchbar onSubmit={this.handleSearch} />
+        <Searchbar onSubmit={this.handleFormSubmit} />
         {isLoading && (
           <BallTriangle
             height={100}
