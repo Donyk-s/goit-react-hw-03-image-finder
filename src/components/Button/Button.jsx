@@ -1,9 +1,10 @@
-import { StyledLoadMoreBtn } from './Button.styled';
+import React from 'react';
+import css from './Button.module.css';
 
-export const Button = ({ loadImg }) => {
-  return (
-    <StyledLoadMoreBtn type="button" onClick={loadImg}>
-      Load more
-    </StyledLoadMoreBtn>
-  );
-};
+const LoadMoreButton = ({ onClick }) => (
+  <button type="button" className={css.Button} onClick={onClick}>
+    Load more
+  </button>
+);
+
+export default LoadMoreButton;

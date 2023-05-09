@@ -1,51 +1,47 @@
-import { Component } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
-import {
-  StyledButtonLlabel,
-  StyledSearchBar,
-  StyledSearchForm,
-  StyledSearchInput,
-  Styledbutton,
-} from './Searchbar.styled';
-import { BsSearch } from 'react-icons/bs';
+import React from 'react';
+import css from './Searchbar.module.css';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 
-export class Searchbar extends Component {
-  state = {
-    imgName: '',
-  };
-  handleSearchImgNameChange = event => {
-    this.setState({ imgName: event.currentTarget.value.toLowerCase() });
-  };
-  handleSubmit = event => {
-    event.preventDefault();
-    if (this.state.imgName.trim() === '') {
-      toast.error('Enter the name for the search');
-      return;
-    }
-    this.props.onSubmit(this.state.imgName);
-    this.setState({ imgName: '' });
-    this.props.resetPage();
-  };
-  render() {
-    return (
-      <StyledSearchBar>
-        <Toaster />
-        <StyledSearchForm onSubmit={this.handleSubmit}>
-          <Styledbutton type="submit">
-            <BsSearch />
-            <StyledButtonLlabel>Search</StyledButtonLlabel>
-          </Styledbutton>
+const SearchInputSchema = Yup.object().shape({
+  search: Yup.string('Enter more than 1 character')
+    .min(2, 'Too Short!')
+    .max(50, 'Too Long!')
+    .required('A term value must be entered'),
+});
 
-          <StyledSearchInput
-            type="text"
-            value={this.state.imgName}
-            onChange={this.handleSearchImgNameChange}
-            autoComplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-          />
-        </StyledSearchForm>
-      </StyledSearchBar>
-    );
+export const Searchbar = ({ onSubmit }) => {
+  function handleSubmit(values, { resetForm }) {
+    const { search } = values;
+    onSubmit(search);
+    resetForm();
   }
-}
+
+  return (
+    <div>
+      <Formik
+        initialValues={{ search: '' }}
+        validationSchema={SearchInputSchema}
+        onSubmit={handleSubmit}
+      >
+        {({ isSubmitting }) => (
+          <header className={css.Searchbar}>
+            <Form className={css.SearchForm}>
+              <button type="submit" className={css.SearchForm__button}>
+                <span className={css.button__label}>Search</span>
+              </button>
+              <ErrorMessage name="search" className={css.ErrorMessage} />
+              <Field
+                name="search"
+                className={css.SearchForm__input}
+                autoComplete="off"
+                autoFocus
+                placeholder="Search images and photos"
+              />
+            </Form>
+          </header>
+        )}
+      </Formik>
+    </div>
+  );
+};

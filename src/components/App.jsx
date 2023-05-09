@@ -1,89 +1,93 @@
+import React, { Component } from 'react';
 import { Searchbar } from './Searchbar/Searchbar';
-import { Component } from 'react';
-import { fetchImg } from 'service/api';
-import { Button } from './Button/Button';
-import { Loader } from './Loader/Loader';
-import { ImageGallery } from './ImageGallery/ImageGallery';
-import toast, { Toaster } from 'react-hot-toast';
-import { StyledLayout } from './Layout/Layout.styled';
-
-const ERROR_MSG = 'Something went wrong, try again';
+import ImageGallery from './ImageGallery/ImageGallery';
+import Button from './Button/Button';
+import css from './App.module.css';
+import { BallTriangle } from 'react-loader-spinner';
+import { getImages } from '../service/api';
+import { ImgModal } from './Modal/ImgModal';
 
 export class App extends Component {
   state = {
-    image: '',
+    images: [],
+    query: '',
     page: 1,
-    hits: null,
+    isLoading: false,
+    showModal: false,
+    selectedImage: null,
+    total: 0,
     error: null,
-    total: null,
-    loading: false,
+    showLoadMore: false,
   };
 
   async componentDidUpdate(prevProps, prevState) {
-    const { image, page } = this.state;
-    if (prevState.image !== this.state.image) {
+    const { query, page } = this.state;
+    if (prevState.query !== query || prevState.page !== page) {
       try {
-        this.setState({ loading: true, hits: null });
-        const { hits, totalHits } = await fetchImg(image, page);
-        this.setState({ hits: hits, total: totalHits });
+        const images = await getImages(query, page);
+        const newTotal = images.total;
+        const newImages = images.hits;
+
+        this.setState(prevState => ({
+          images: page === 1 ? newImages : [...prevState.images, ...newImages],
+          total: newTotal,
+          showLoadMore: newTotal > page * 12,
+          isLoading: false,
+        }));
       } catch (error) {
-        this.setState({ error: ERROR_MSG });
-      } finally {
-        this.setState({ loading: false });
-      }
-    }
-    if (prevState.page !== this.state.page && this.state.page > 1) {
-      try {
-        this.setState({ loading: true });
-        const { hits } = await fetchImg(image, page);
-        this.setState({ hits: [...this.state.hits, ...hits] });
-      } catch (error) {
-        this.setState({ error: ERROR_MSG });
-      } finally {
-        this.setState({ loading: false });
+        console.log(error);
+        this.setState({ error, isLoading: false });
       }
     }
   }
 
-  handleFormSubmit = imgName => {
-    console.log('Search term:', imgName);
-    this.setState({ image: imgName });
-  };
-  loadMoreImg = () => {
-    console.log('Current page:', this.state.page);
-    this.setState({ page: this.state.page + 1 });
-    if (
-      this.state.hits !== null &&
-      this.state.hits.length === this.state.total
-    ) {
-      toast("We're sorry, but you've reached the end of search results.");
-    }
+  handleLoadMore = () => {
+    this.setState(prevState => ({ page: prevState.page + 1 }));
   };
 
-  getHits = hits => {
-    this.setState({ hits: hits });
+  handleFormSubmit = query => {
+    this.setState({ query, page: 1, images: [], isLoading: true });
   };
-  resetPage = () => {
-    this.setState({ page: 1 });
+
+  handleImageClick = (largeImageURL, tags) => {
+    this.setState({
+      showModal: true,
+      selectedImage: { largeImageURL: largeImageURL, tags: tags },
+    });
+  };
+
+  closeModal = () => {
+    this.setState({ showModal: false });
   };
 
   render() {
-    const { error, hits, total } = this.state;
-    return (
-      <StyledLayout>
-        <Searchbar
-          onSubmit={this.handleFormSubmit}
-          resetPage={this.resetPage}
-        />
-        {error && <div>{error}</div>}
-        {hits !== null && <ImageGallery hits={hits} />}
+    const { images, isLoading, showLoadMore } = this.state;
 
-        {hits !== null && hits.length <= total && (
-          <Button loadImg={this.loadMoreImg} />
+    return (
+      <div className={css.App}>
+        <Searchbar onSubmit={this.handleFormSubmit} />
+        {isLoading && (
+          <BallTriangle
+            height={100}
+            width={100}
+            radius={5}
+            color="#4fa94d"
+            ariaLabel="ball-triangle-loading"
+          />
         )}
-        <Toaster />
-        {this.state.loading && <Loader />}
-      </StyledLayout>
+        <ImageGallery images={images} onImageClick={this.handleImageClick} />
+        {showLoadMore && (
+          <Button onClick={this.handleLoadMore} text="Load more" />
+        )}
+        {this.state.showModal && (
+          <ImgModal
+            isOpen={this.state.showModal}
+            closeModal={this.closeModal}
+            largeImageURL={this.state.selectedImage.largeImageURL}
+            tags={this.state.selectedImage.tags}
+          />
+        )}
+      </div>
     );
   }
 }
