@@ -1,115 +1,89 @@
-import React, { Component } from 'react';
-import { Searchbar } from './searchbar/Searchbar';
-import { ImageGallery } from './imageGallery/ImageGallery';
-import Button from './button/Button';
-import css from './App.module.css';
-import { BallTriangle } from 'react-loader-spinner';
-import { getImages } from '../service/Api';
-import { Modal } from './modal/Modal';
+import { Searchbar } from './Searchbar/Searchbar';
+import { Component } from 'react';
+import { fetchImg } from 'service/api';
+import { Button } from './Button/Button';
+import { Loader } from './Loader/Loader';
+import { ImageGallery } from './ImageGallery/ImageGallery';
+import toast, { Toaster } from 'react-hot-toast';
+import { StyledLayout } from './Layout/Layout.styled';
+
+const ERROR_MSG = 'Something went wrong, try again';
 
 export class App extends Component {
   state = {
-    images: [],
-    query: '',
+    image: '',
     page: 1,
-    isLoading: false,
-    showModal: false,
-    selectedImage: null,
-    total: 0,
+    hits: null,
     error: null,
-    showLoadMore: false,
+    total: null,
+    loading: false,
   };
 
   async componentDidUpdate(prevProps, prevState) {
-    const { query, page } = this.state;
-    if (prevState.query !== query || prevState.page !== page) {
+    const { image, page } = this.state;
+    if (prevState.image !== this.state.image) {
       try {
-        const images = await getImages(query, page);
-        const newTotal = images.total;
-        const newImages = images.hits;
-
-        this.setState(prevState => ({
-          images: page === 1 ? newImages : [...prevState.images, ...newImages],
-          total: newTotal,
-          showLoadMore: newTotal > page * 12,
-          isLoading: false,
-        }));
+        this.setState({ loading: true, hits: null });
+        const { hits, totalHits } = await fetchImg(image, page);
+        this.setState({ hits: hits, total: totalHits });
       } catch (error) {
-        console.log(error);
-        this.setState({ error, isLoading: false });
+        this.setState({ error: ERROR_MSG });
+      } finally {
+        this.setState({ loading: false });
+      }
+    }
+    if (prevState.page !== this.state.page && this.state.page > 1) {
+      try {
+        this.setState({ loading: true });
+        const { hits } = await fetchImg(image, page);
+        this.setState({ hits: [...this.state.hits, ...hits] });
+      } catch (error) {
+        this.setState({ error: ERROR_MSG });
+      } finally {
+        this.setState({ loading: false });
       }
     }
   }
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  handleFormSubmit = imgName => {
+    console.log('Search term:', imgName);
+    this.setState({ image: imgName });
+  };
+  loadMoreImg = () => {
+    console.log('Current page:', this.state.page);
+    this.setState({ page: this.state.page + 1 });
+    if (
+      this.state.hits !== null &&
+      this.state.hits.length === this.state.total
+    ) {
+      toast("We're sorry, but you've reached the end of search results.");
+    }
   };
 
-  handleFormSubmit = query => {
-    this.setState({ query, page: 1, images: [], isLoading: true });
+  getHits = hits => {
+    this.setState({ hits: hits });
   };
-
-  // handleImageClick = (largeImageURL, tags) => {
-  //   this.setState({
-  //     showModal: true,
-  //     selectedImage: { largeImageURL: largeImageURL, tags: tags },
-  //   });
-  // };
-  clickLoad = () => {
-    this.setState(prevSt => ({
-      page: prevSt.page + 1, // збільшуємо номер сторінки на +1
-    }));
-  };
-
-  handleImageClick = (largeImageURL, tags) => {
-    this.setState({
-      showModal: true,
-      selectedImage: { largeImageURL: largeImageURL, tags: tags },
-    });
-  };
-  // Функція, яка викликається при натисканні на картинку.
-  openModal = () => {
-    const { selectedImage } = this.state;
-    this.setState({
-      showModal: true,
-      largeImageURL: selectedImage.largeImageURL,
-      alt: selectedImage.tags,
-    });
-  };
-
-  closeModal = () => {
-    this.setState({
-      showModal: false,
-      largeImageURL: '',
-      alt: '',
-    });
+  resetPage = () => {
+    this.setState({ page: 1 });
   };
 
   render() {
-    const { images, isLoading, showLoadMore } = this.state;
-
+    const { error, hits, total } = this.state;
     return (
-      <div className={css.App}>
-        <Searchbar onSubmit={this.handleFormSubmit} />
-        {isLoading && (
-          <BallTriangle
-            height={100}
-            width={100}
-            radius={5}
-            color="#4fa94d"
-            ariaLabel="ball-triangle-loading"
-          />
+      <StyledLayout>
+        <Searchbar
+          onSubmit={this.handleFormSubmit}
+          resetPage={this.resetPage}
+        />
+        {error && <div>{error}</div>}
+        {hits !== null && <ImageGallery hits={hits} />}
+
+        {hits !== null && hits.length <= total && (
+          <Button loadImg={this.loadMoreImg} />
         )}
-        <ImageGallery images={images} onImageClick={this.handleImageClick} />
-        {showLoadMore && (
-          <Button onClick={this.handleLoadMore} text="Load more" />
-        )}
-        {this.state.showModal && (
-          <Modal closeModal={this.closeModal}>
-            <img src={this.state.largeImageURL} alt={this.state.alt} />
-          </Modal>
-        )}
-      </div>
+        <Toaster />
+        {this.state.loading && <Loader />}
+      </StyledLayout>
     );
   }
 }
