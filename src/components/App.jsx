@@ -14,9 +14,10 @@ export class App extends Component {
     page: 1,
     isLoading: false,
     showModal: false,
-    selectedImage: null,
+    largeImage: '',
     total: 0,
     error: null,
+    tags: '',
     showLoadMore: false,
   };
 
@@ -49,15 +50,12 @@ export class App extends Component {
     this.setState({ query, page: 1, images: [], isLoading: true });
   };
 
-  handleImageClick = (largeImageURL, tags) => {
-    this.setState({
-      showModal: true,
-      selectedImage: { largeImageURL: largeImageURL, tags: tags },
-    });
+  handleImageClick = (largeImage, tags) => {
+    this.setState({ showModal: true, largeImage, tags });
   };
 
   closeModal = () => {
-    this.setState({ showModal: false });
+    this.setState({ showModal: false, largeImage: '', tags: '' });
   };
 
   render() {
@@ -81,10 +79,9 @@ export class App extends Component {
         )}
         {this.state.showModal && (
           <ImgModal
-            isOpen={this.state.showModal}
+            largeImageURL={this.state.largeImage}
+            tags={this.state.tags}
             closeModal={this.closeModal}
-            largeImageURL={this.state.selectedImage.largeImageURL}
-            tags={this.state.selectedImage.tags}
           />
         )}
       </div>
