@@ -11,18 +11,19 @@
 //   </li>
 // );
 import React, { Component } from 'react';
+import css from './ImageGalleryItem.module.css';
 
 class ImageGalleryItem extends Component {
   render() {
     const { hit, onImageClick } = this.props;
 
     return (
-      <li key={hit.id} className="ImageGalleryItem">
+      <li key={hit.id} className={css.ImageGalleryItem}>
         <img
           src={hit.webformatURL}
           alt={hit.tags}
           data-source={hit.largeImageURL}
-          className="ImageGalleryItem-image"
+          className={css.ImageGalleryItemImage}
           onClick={() => onImageClick(hit.largeImageURL, hit.tags)}
         />
       </li>

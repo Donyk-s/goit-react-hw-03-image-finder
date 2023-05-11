@@ -1,13 +1,20 @@
-import React from 'react';
-import css from './Searchbar.module.css';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import css from './Searchbar.module.css';
+import PropTypes from 'prop-types';
 
 const SearchInputSchema = Yup.object().shape({
   search: Yup.string('Enter more than 1 character')
     .min(2, 'Too Short!')
     .max(50, 'Too Long!')
-    .required('A term value must be entered'),
+    .matches(/^\S*$/, 'Spaces are not allowed')
+    .test(
+      'is-valid-search',
+      'Search can only contain letters and numbers',
+      value => {
+        return /^[a-zA-Z0-9]+$/.test(value);
+      }
+    ),
 });
 
 export const Searchbar = ({ onSubmit }) => {
@@ -44,4 +51,7 @@ export const Searchbar = ({ onSubmit }) => {
       </Formik>
     </div>
   );
+};
+Searchbar.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
 };

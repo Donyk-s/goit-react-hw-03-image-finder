@@ -6,6 +6,8 @@ import css from './App.module.css';
 import { BallTriangle } from 'react-loader-spinner';
 import { getImages } from '../service/api';
 import { ImgModal } from './Modal/ImgModal';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export class App extends Component {
   state = {
@@ -42,12 +44,20 @@ export class App extends Component {
     }
   }
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
-  };
-
-  handleFormSubmit = query => {
-    this.setState({ query, page: 1, images: [], isLoading: true });
+  handleFormSubmit = async query => {
+    this.setState({ query, page: 1, images: [], isLoading: true, error: null });
+    try {
+      const response = await getImages(query);
+      const images = response.hits;
+      if (images.length === 0) {
+        toast.warn('Sorry, no images found for your search. Please try again!');
+      }
+      this.setState({ images });
+    } catch (error) {
+      this.setState({ error: error.message });
+    } finally {
+      this.setState({ isLoading: false });
+    }
   };
 
   handleImageClick = (largeImage, tags) => {
@@ -59,11 +69,12 @@ export class App extends Component {
   };
 
   render() {
-    const { images, isLoading, showLoadMore } = this.state;
+    const { images, isLoading, showLoadMore, total } = this.state;
 
     return (
       <div className={css.App}>
         <Searchbar onSubmit={this.handleFormSubmit} />
+        <ToastContainer />
         {isLoading && (
           <BallTriangle
             height={100}
@@ -73,7 +84,18 @@ export class App extends Component {
             ariaLabel="ball-triangle-loading"
           />
         )}
+        {total === 0 && (
+          <ToastContainer type="error" autoClose={false}>
+            No results found. Please try a different search term.
+          </ToastContainer>
+        )}
         <ImageGallery images={images} onImageClick={this.handleImageClick} />
+        {images.length === 0 && !isLoading && (
+          <ToastContainer type="error" autoClose={false}>
+            No results found. Please try a different search term.
+          </ToastContainer>
+        )}
+
         {showLoadMore && (
           <Button onClick={this.handleLoadMore} text="Load more" />
         )}

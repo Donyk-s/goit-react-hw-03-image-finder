@@ -8,6 +8,6 @@ export const getImages = async (query, page) => {
     const response = await axios.get(`&per_page=12&page=${page}&q=${query}`);
     return response.data;
   } catch (error) {
-    console.log(error);
+    throw new Error('Failed to search for images.'); // повернути помилку
   }
 };
