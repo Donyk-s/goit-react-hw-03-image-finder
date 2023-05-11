@@ -3,10 +3,11 @@ import { Searchbar } from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
 import css from './App.module.css';
-import { BallTriangle } from 'react-loader-spinner';
+// import { BallTriangle } from 'react-loader-spinner';
 import { getImages } from '../service/api';
 import { ImgModal } from './Modal/ImgModal';
 import { ToastContainer, toast } from 'react-toastify';
+import { Loader } from './Loader/Loader';
 import 'react-toastify/dist/ReactToastify.css';
 
 export class App extends Component {
@@ -59,6 +60,12 @@ export class App extends Component {
       this.setState({ isLoading: false });
     }
   };
+  handleLoadMore = async () => {
+    this.setState(prevState => ({
+      page: prevState.page + 1,
+      isLoading: true,
+    }));
+  };
 
   handleImageClick = (largeImage, tags) => {
     this.setState({ showModal: true, largeImage, tags });
@@ -75,15 +82,7 @@ export class App extends Component {
       <div className={css.App}>
         <Searchbar onSubmit={this.handleFormSubmit} />
         <ToastContainer />
-        {isLoading && (
-          <BallTriangle
-            height={100}
-            width={100}
-            radius={5}
-            color="#4fa94d"
-            ariaLabel="ball-triangle-loading"
-          />
-        )}
+        {isLoading && <Loader />}
         {total === 0 && (
           <ToastContainer type="error" autoClose={false}>
             No results found. Please try a different search term.
