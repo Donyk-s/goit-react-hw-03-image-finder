@@ -1,6 +1,6 @@
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import Api from '../service/Api;
+import Api from '../service/Api';
 import css from './Searchbar.module.css';
 import PropTypes from 'prop-types';
 
