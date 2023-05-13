@@ -4,7 +4,7 @@ import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
 import css from './App.module.css';
 // import { BallTriangle } from 'react-loader-spinner';
-import { getImages } from '../service/api';
+import { getImages } from './service/api';
 import { ImgModal } from './Modal/ImgModal';
 import { ToastContainer, toast } from 'react-toastify';
 import { Loader } from './Loader/Loader';
