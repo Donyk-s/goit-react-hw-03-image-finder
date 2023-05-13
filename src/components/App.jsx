@@ -3,7 +3,6 @@ import { Searchbar } from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
 import css from './App.module.css';
-// import { BallTriangle } from 'react-loader-spinner';
 import { getImages } from './service/api';
 import { ImgModal } from './Modal/ImgModal';
 import { ToastContainer, toast } from 'react-toastify';
@@ -27,40 +26,35 @@ export class App extends Component {
   async componentDidUpdate(prevProps, prevState) {
     const { query, page } = this.state;
     if (prevState.query !== query || prevState.page !== page) {
-      try {
-        const images = await getImages(query, page);
-        const newTotal = images.total;
-        const newImages = images.hits;
-
-        this.setState(prevState => ({
-          images: page === 1 ? newImages : [...prevState.images, ...newImages],
-          total: newTotal,
-          showLoadMore: newTotal > page * 12,
-          isLoading: false,
-        }));
-      } catch (error) {
-        console.log(error);
-        this.setState({ error, isLoading: false });
-      }
+      this.fetch(query, page);
     }
   }
-
-  handleFormSubmit = async query => {
-    this.setState({ query, page: 1, images: [], isLoading: true, error: null });
+  fetch = async (query, page) => {
     try {
-      const response = await getImages(query);
-      const images = response.hits;
-      if (images.length === 0) {
+      const images = await getImages(query, page);
+      if (images.hits.length === 0) {
         toast.warn('Sorry, no images found for your search. Please try again!');
       }
-      this.setState({ images });
+      const newTotal = images.total;
+      const newImages = images.hits;
+
+      this.setState(prevState => ({
+        images: page === 1 ? newImages : [...prevState.images, ...newImages],
+        total: newTotal,
+        showLoadMore: newTotal > page * 12,
+        isLoading: false,
+      }));
     } catch (error) {
-      this.setState({ error: error.message });
-    } finally {
-      this.setState({ isLoading: false });
+      console.log(error);
+      this.setState({ error, isLoading: false });
     }
   };
-  handleLoadMore = async () => {
+
+  handleFormSubmit = query => {
+    this.setState({ query, page: 1, images: [], isLoading: true, error: null });
+  };
+
+  handleLoadMore = () => {
     this.setState(prevState => ({
       page: prevState.page + 1,
       isLoading: true,
